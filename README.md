@@ -51,6 +51,7 @@ sudo swapoff -a
 #### Disable swap on startup in /etc/fstab:
 ```
 sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+sudo mount -a
 ```
 #### Install dependency packages:
 ```
