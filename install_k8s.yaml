@@ -1,0 +1,96 @@
+---
+- hosts: all
+  remote_user: kube
+  become: true
+  become_method: sudo
+  become_user: root
+  gather_facts: true
+  connection: ssh
+  vars:
+    sysctl_config:
+      net.bridge.bridge-nf-call-iptables: 1
+      net.ipv4.ip_forward: 1
+      net.bridge.bridge-nf-call-ip6tables: 1
+
+  tasks:
+    - name: load moduls
+      community.general.modprobe:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - overlay
+        - br_netfilter
+
+    - name: add conf for containerd
+      ansible.posix.sysctl:
+        sysctl_file: "/etc/sysctl.d/99-kubernetes-cri.conf"
+        name: '{{ item.key }}'
+        value: '{{ item.value }}'
+        sysctl_set: true
+        state: present
+        reload: true
+        ignoreerrors: true
+      with_dict: '{{ sysctl_config }}'
+
+    - name: install containerd
+      ansible.builtin.apt:
+        name:
+          - containerd
+          - apt-transport-https
+          - curl
+        update_cache: true
+
+    - name: create folder
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+        recurse: true
+
+    - name: init conf containerd
+      ansible.builtin.shell: |
+        containerd config default | tee /etc/containerd/config.toml
+      args:
+        creates: "/etc/containerd/config.toml"
+      notify:
+        - restart containerd
+
+    - name: disable swap
+      ansible.posix.mount:
+        name: swap
+        fstype: swap
+        state: absent
+
+    - name: add an apt signing key
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: add K8s Source
+      ansible.builtin.blockinfile:
+        path: "/etc/apt/sources.list.d/kubernetes.list"
+        block: |
+              deb https://apt.kubernetes.io/ kubernetes-xenial main
+        create: true
+
+    - name: install kubernetes
+      ansible.builtin.apt:
+        name:
+          - kubelet=1.20.1-00
+          - kubeadm=1.20.1-00
+          - kubectl=1.20.1-00
+        update_cache: true
+
+    - name: prevent kube from being upgraded
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      with_items:
+        - kubelet
+        - kubeadm
+        - kubectl
+
+  handlers:
+    - name: restart containerd
+      ansible.builtin.service:
+        name: containerd
+        state: restarted
