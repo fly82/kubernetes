@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: eureka
+spec:
+  serviceName: "eureka"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka
+  template:
+    metadata:
+      labels:
+        app: eureka
+    spec:
+      containers:
+      - name: eureka
+        image: eureka
+        command:
+          - java
+          - -Djava.security.egd=file:/dev/./urandom
+          - -Dspring.config.location=/home/nonroot/
+          - -jar
+          - /app.jar
+        volumeMounts:
+        - name: config-volume
+          mountPath: /home/nonroot
+        securityContext:
+          runAsUser: 65532 # id nonroot user
+          allowPrivilegeEscalation: false
+          # Unable to create tempDir. Read-only file system
+          # readOnlyRootFilesystem: true
+        imagePullPolicy: Never
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "1200Mi"
+            cpu: "500m"
+        env:
+        - name: EUREKA_SERVER_ADDRESS
+          valueFrom:
+            configMapKeyRef:
+              name: eureka-cm
+              key: eureka_service_address
+        - name: JVM_OPTS
+          value: "-Xms1g -Xmx1g"
+        ports:
+        - containerPort: 8761
+          name: eureka-tp
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8761
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8761
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: config-volume
+        configMap:
+          name: eureka-setup-cm
+          items:
+          - key: application.yml
+            path: application.yml
+          - key: log4j2.xml
+            path: log4j2.xml
