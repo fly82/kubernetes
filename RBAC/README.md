@@ -18,6 +18,7 @@ kind: CertificateSigningRequest
 metadata:
   name: vadym_csr
 spec:
+  signerName: kubernetes.io/kube-apiserver-client
   groups:
   - system:authenticated
   request: ${BASE64_CSR}
