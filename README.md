@@ -73,7 +73,7 @@ sudo apt-get update
 ```
 #### Install Kubernetes packages (Note: If you get a dpkg lock message, just wait a minute or two before trying the command again):
 ```
-sudo apt-get install -y kubelet=1.22.0-00 kubeadm=1.22.0-00 kubectl=1.22.0-00
+sudo apt-get install -y kubelet=1.23.0-00 kubeadm=1.23.0-00 kubectl=1.23.0-00
 ```
 #### Turn off automatic updates:
 ```
@@ -83,7 +83,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 ## Initialize the Cluster
 #### Initialize the Kubernetes cluster on the control plane node using kubeadm (Note: This is only performed on the Control Plane Node):
 ```
-sudo kubeadm init --pod-network-cidr 192.168.0.0/16 --kubernetes-version 1.22.0
+sudo kubeadm init --pod-network-cidr 192.168.0.0/16 --kubernetes-version 1.23.0
 ```
 #### Set kubectl access:
 ```
