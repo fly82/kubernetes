@@ -1,119 +1,22 @@
-## Install Packages
-#### Log into the Control Plane Node (Note: The following steps must be performed on all three nodes.).
-#### Create configuration file for containerd:
+```yaml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+- role: control-plane
+  image: kindest/node:v1.29.2@sha256:acc9e82a5a5bd3dfccfd03117e9ef5f96b46108b55cd647fb5e7d0d1a35c9c6f
+  extraPortMappings:
+    - containerPort: 30000
+      hostPort: 30000
+      listenAddress: "0.0.0.0"
+      protocol: tcp
+- role: worker
+  image: kindest/node:v1.29.2@sha256:acc9e82a5a5bd3dfccfd03117e9ef5f96b46108b55cd647fb5e7d0d1a35c9c6f
+    #networking:
+    #disableDefaultCNI: false
+    #podSubnet: "10.0.0.0/16"
+    #serviceSubnet: "10.1.0.0/16"
 ```
-cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
-overlay
-br_netfilter
-EOF
-```
-#### Load modules:
-```
-sudo modprobe overlay
-sudo modprobe br_netfilter
-```
-#### Set system configurations for Kubernetes networking:
-```
-cat <<EOF | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
-net.bridge.bridge-nf-call-iptables = 1
-net.ipv4.ip_forward = 1
-net.bridge.bridge-nf-call-ip6tables = 1
-EOF
-```
-#### Apply new settings:
-```
-sudo sysctl --system
-```
-#### Install containerd:
-```
-sudo apt-get update && sudo apt-get install -y containerd
-```
-#### Create default configuration file for containerd:
-```
-sudo mkdir -p /etc/containerd
-```
-#### Generate default containerd configuration and save to the newly created default file:
-```
-sudo containerd config default | sudo tee /etc/containerd/config.toml
-```
-#### Restart containerd to ensure new configuration file usage:
-```
-sudo systemctl restart containerd
-```
-#### Verify that containerd is running.
-```
-sudo systemctl status containerd
-```
-#### Disable swap:
-```
-sudo swapoff -a
-```
-#### Disable swap on startup in /etc/fstab:
-```
-sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-sudo mount -a
-```
-#### Install dependency packages:
-```
-sudo apt-get update && sudo apt-get install -y apt-transport-https curl
-```
-#### Download and add GPG key:
-```
-curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-```
-#### Add Kubernetes to repository list:
-```
-cat <<EOF | sudo tee /etc/apt/sources.list.d/kubernetes.list
-deb https://apt.kubernetes.io/ kubernetes-xenial main
-EOF
-```
-#### Update package listings:
-```
-sudo apt-get update
-```
-#### Install Kubernetes packages (Note: If you get a dpkg lock message, just wait a minute or two before trying the command again):
-```
-sudo apt-get install -y kubelet=1.23.0-00 kubeadm=1.23.0-00 kubectl=1.23.0-00
-```
-#### Turn off automatic updates:
-```
-sudo apt-mark hold kubelet kubeadm kubectl
-```
-#### Log into both Worker Nodes to perform previous steps.
-## Initialize the Cluster
-#### Initialize the Kubernetes cluster on the control plane node using kubeadm (Note: This is only performed on the Control Plane Node):
-```
-sudo kubeadm init --pod-network-cidr 192.168.0.0/16 --kubernetes-version 1.23.0
-```
-#### Set kubectl access:
-```
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-```
-#### Test access to cluster:
-```
-kubectl get nodes
-```
-## Install the Calico Network Add-On
-#### On the Control Plane Node, install Calico Networking:
-```
-kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-```
-#### Check status of the control plane node:
-```
-kubectl get nodes
-```
-## Join the Worker Nodes to the Cluster
-#### In the Control Plane Node, create the token and copy the kubeadm join command (NOTE:The join command can also be found in the output from kubeadm init command):
-```
-kubeadm token create --print-join-command
-```
-#### In both Worker Nodes, paste the kubeadm join command to join the cluster. Use sudo to run it as root:
-```
-sudo kubeadm join ...
-```
-#### In the Control Plane Node, view cluster status (Note: You may have to wait a few moments to allow all nodes to become ready):
-```
-kubectl get nodes
+```bash
+wget https://github.com/kubernetes-sigs/kind/releases/download/v0.22.0/kind-linux-amd64
+kind create cluster --name c1 --config kind-c1.yaml
 ```
