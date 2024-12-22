@@ -4,8 +4,11 @@ kubectl wait \
 	--for=condition=ready pod \
 	--selector=app=metallb \
 	--timeout=90s
-docker network inspect -f '{{.IPAM.Config}}' kind
-kubectl apply -f metallb.yaml
+KIND_NET_CIDR=$(docker network inspect kind -f '{{(index .IPAM.Config 0).Subnet}}')
+METALLB_IP_BEGIN=$(echo ${KIND_NET_CIDR} | sed "s@0.0/16@255.200@")
+METALLB_IP_END=$(echo ${KIND_NET_CIDR} | sed "s@0.0/16@255.250@")
+export METALLB_IP_RANGE="${METALLB_IP_BEGIN}-${METALLB_IP_END}"
+envsubst < metallb.yaml.tpl | kubectl apply -f -
 kubectl get crd gateways.gateway.networking.k8s.io &> /dev/null ||   { kubectl kustomize "github.com/kubernetes-sigs/gateway-api/config/crd?ref=v1.2.1" | kubectl apply -f -; }
 istioctl install --set profile=minimal -y
 kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.24/samples/httpbin/httpbin.yaml
