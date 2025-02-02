@@ -5,12 +5,16 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.1/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.1/config/crd/experimental/gateway.networking.k8s.io_tlsroutes.yaml
 cilium install --version 1.16.5 \
-    --set kubeProxyReplacement=true \
     --set gatewayAPI.enabled=true \
     --set envoy.securityContext.capabilities.keepCapNetBindService=true \
     --set l2announcements.enabled=true \
     --set cluster.name=c1 \
-    --set cluster.id=1
+    --set cluster.id=1 \
+    --set cni.chainingTarget=kindnet \
+    --set cni.chainingMode=generic-veth \
+    --set routingMode=native \
+    --set enableIPv4Masquerade=false \
+    --set enableIPv6Masquerade=false
 kubectl wait \
 	--namespace kube-system \
 	--for=condition=ready pod \
