@@ -1,5 +1,6 @@
+# Download from https://github.com/kubernetes-sigs/kind/releases
 ```bash
-wget https://github.com/kubernetes-sigs/kind/releases/download/v0.25.0/kind-linux-amd64
+wget https://github.com/kubernetes-sigs/kind/releases/download/v0.29.0/kind-linux-amd64
 ```
 ```yaml
 kind: Cluster
