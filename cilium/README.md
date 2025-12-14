@@ -1,5 +1,5 @@
 ```bash
-wget https://github.com/cilium/cilium-cli/releases/download/v0.16.22/cilium-linux-amd64.tar.gz
+wget https://github.com/cilium/cilium-cli/releases/download/v0.18.8/cilium-linux-amd64.tar.gz
 tar -xf cilium-linux-amd64.tar.gz
 ```
 ```yaml
@@ -7,14 +7,14 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
 - role: control-plane
-  image: kindest/node:v1.32.0@sha256:c48c62eac5da28cdadcf560d1d8616cfa6783b58f0d94cf63ad1bf49600cb027
+  image: kindest/node:v1.34.2@sha256:745f8ed46d8e99517774768227fd1a0af34a6bf395aef9c7ed98fbce0e263918
   #extraPortMappings:
   #  - containerPort: 30000
   #    hostPort: 30000
   #    listenAddress: "0.0.0.0"
   #    protocol: tcp
 - role: worker
-  image: kindest/node:v1.32.0@sha256:c48c62eac5da28cdadcf560d1d8616cfa6783b58f0d94cf63ad1bf49600cb027
+  image: kindest/node:v1.34.2@sha256:745f8ed46d8e99517774768227fd1a0af34a6bf395aef9c7ed98fbce0e263918
 networking:
   disableDefaultCNI: true
   kubeProxyMode: "none"
